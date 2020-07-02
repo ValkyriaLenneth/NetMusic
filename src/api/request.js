@@ -9,9 +9,10 @@ export const getRecommendListRequest = () => {
 }
 
 export const getHotSingerListRequest = (count) => {
-    return axiosInstance.get(`/top/artists?offset=$(count)`);
+    return axiosInstance.get(`/top/artists?offset=${count}`);
 }
 
-export const getSingerListRequest = (category, alpha, count) => {
-    return axiosInstance.get(`/artist/list?cat=$(category)&initial=$(alpha.toLowerCase())&offset=$(count)`);
+export const getSingerListRequest= (category, alpha, count) => {
+    // TODO: change the parameter of api from cat to type and area
+    return axiosInstance.get(`/artist/list?cat=${category}&initial=${alpha.toLowerCase()}&offset=${count}`);
 }

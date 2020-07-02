@@ -1,36 +1,44 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import Horizen from "../../baseUI/horizen-item";
 import {alphaTypes, categoryTypes} from '../../api/config';
 import { NavContainer, List, ListContainer, ListItem } from "./style";
 import Scroll from "../../baseUI/scroll";
+import { connect } from 'react-redux';
+import { getSingerList, getHotSingerList, changeEnterLoading, refreshMoreHotSingerList, refreshMoreSingerList, changePageCount, changePullUpLoading, changePullDownLoading } from "./stores/actionCreators";
+
+
 
 function Singers(props) {
 
     let [category, setCategory] = useState('');
     let [alpha, setAlpha] = useState ('');
 
+    const { singerList, enterLoading, pullUpLoading, pullDownLoading, getCount } = props;
+    const { getHotSingerDispatch, updateDispatch, pullDownRefreshDispatch, pullUpRefreshDispatch } = props;
+
+    useEffect( () => {
+        getHotSingerDispatch();
+
+    }, []);
+
     let handleUpdateAlpha = (val) => {
         setAlpha(val);
+        updateDispatch(category, val);
     }
 
     let handleUpdateCategory = (val) => {
         setCategory(val);
+        updateDispatch(val, alpha);
     }
 
-    // mock data
-    const singerList = [1, 2,3, 4,5,6,7,8,9,10,11,12,13,14,15,16].map(item => {
-        return {
-            picUrl: "https://p2.music.126.net/uTwOm8AEFFX_BYHvfvFcmQ==/109951164232057952.jpg",
-            name: "隔壁老樊",
-            accountId: 277313426,
-        }
-    });
+
 
     const renderSingerList = () => {
+        const list = singerList? singerList.toJS(): [];
         return (
             <List>
                 {
-                    singerList.map((item, index) => {
+                    list.map((item, index) => {
                         return (
                             <ListItem key={item.accountId+""+index}>
                                 <div className="img_wrapper">
@@ -51,13 +59,13 @@ function Singers(props) {
                 <Horizen
                     list={categoryTypes}
                     title={"categories(default)"}
-                    handleClick={handleUpdateCategory}
+                    handleClick={(val) => handleUpdateCategory(val)}
                     oldVal={category}
                 ></Horizen>
                 <Horizen
                     list={alphaTypes}
                     title={"alphaTypes:"}
-                    handleClick={handleUpdateAlpha}
+                    handleClick={(val) => handleUpdateAlpha(val)}
                     oldVal={alpha}
                 ></Horizen>
             </NavContainer>
@@ -71,4 +79,47 @@ function Singers(props) {
     )
 }
 
-export default React.memo(Singers);
+const mapStateToProps = (state) => ({
+    singerList: state.getIn(['singers', 'singerList']),
+    enterLoading: state.getIn(['singers', 'enterLoading']),
+    pullUpLoading: state.getIn(['singers', 'pullUpLoading']),
+    pullDownLoading: state.getIn(['singers', 'pullDownLoading']),
+    pageCount: state.getIn(['singers', 'pageCount']),
+});
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        getHotSingerDispatch() {
+            dispatch(getHotSingerList());
+        },
+        updateDispatch(category, alpha) {
+            dispatch(changePageCount(0));
+            dispatch(changeEnterLoading(true));
+            console.log("updateDispatch ")
+            dispatch(getSingerList(category, alpha));
+
+        },
+        pullUpRefreshDispatch(category, alpha, hot, count) {
+            dispatch(changePullUpLoading(true));
+            dispatch(changePageCount(count+1));
+            if(hot) {
+                dispatch(refreshMoreHotSingerList());
+            }else {
+                dispatch(refreshMoreSingerList(category, alpha));
+            }
+        },
+        pullDownRefreshDispatch(category, alpha){
+            dispatch(changePullDownLoading(true));
+            dispatch(changePageCount(0));
+            if(category === '' && alpha === ''){
+                console.log("done");
+
+                dispatch(getHotSingerList());
+            }else {
+                dispatch(getSingerList(category, alpha));
+            }
+        }
+    }
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(React.memo(Singers));
