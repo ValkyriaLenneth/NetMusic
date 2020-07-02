@@ -11,16 +11,14 @@ function Slider(props) {
     useEffect(() => {
         if(bannerList.length && !sliderSwiper){
             // init sliderSwiper
-            let newSliderSwiper = new Swiper(".slider-container", {
+            let sliderSwiper = new Swiper(".slider-container", {
             //    init new Slider
                 loop: true,
-                autoplay: {
-                    delay: 3000,
-                    disableOnInteraction: false,
-                },
+                autoplay: true,
+                autoplayDisableOnInteraction: false,
                 pagination: {el: '.swiper-pagination'},
             });
-            setSliderSwiper(newSliderSwiper);
+            setSliderSwiper(sliderSwiper);
         }
     }, [bannerList.length, sliderSwiper]); // deps: which outer values are used in hook
 
