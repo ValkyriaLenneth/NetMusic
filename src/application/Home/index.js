@@ -25,7 +25,7 @@ function Home (props) {
                         <span>歌手</span>
                     </TabItem>
                 </NavLink>
-                <NavLink to="/ranks" activeClassName="selected">
+                <NavLink to="/rank" activeClassName="selected">
                     <TabItem>
                         <span>排行</span>
                     </TabItem>

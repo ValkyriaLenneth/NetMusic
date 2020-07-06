@@ -1,20 +1,52 @@
-import React, {forwardRef, useEffect, useState, useRef, useImperativeHandle} from "react";
+import React, {forwardRef, useEffect, useState, useRef, useImperativeHandle, useMemo} from "react";
 import PropTypes from 'prop-types';
 import BScroll from "better-scroll";
 import styled from "styled-components";
+import Loading from "../loading/index";
+import LoadingV2 from "../loading-v2";
+import { debounce } from "../../api/utils";
 
 const ScrollContainer = styled.div`
     width: 100%;
     height: 100%;
     overflow: hidden;
 `
+const PullUpLoading = styled.div`
+  position: absolute;
+  left: 0;right: 0;
+  bottom: 5px;
+  width: 60px;
+  height: 60px;
+  margin: auto;
+  z-index: 100;
+`
+
+const PullDownLoading = styled.div`
+  position: absolute;
+  left: 0;right: 0;
+  top: 0;
+  height: 60px;
+  margin: auto;
+  z-index: 100;
+`
 
 const Scroll = forwardRef((props, ref) => {
 
-    const [bScroll, setBscroll] = useState();
+    const [bScroll, setBScroll] = useState();
     const scrollContainerRef = useRef();
     const {direction, click, refresh, pullUpLoading, pullDownLoading, bounceTop, bounceBottom } = props;
     const { pullUp, pullDown, onScroll } = props;
+    const PullUpdisplayStyle = pullUpLoading? {display: ""} : {display: "none"};
+    const PullDowndisplayStyle = pullDownLoading? {display: ""} : {display: "none"};
+
+    let pullUpDebounce = useMemo(()=>{
+        return debounce(pullUp, 300);
+    }, [pullUp]);
+
+    let pullDownDebounce = useMemo(() => {
+        return debounce(pullDown, 300);
+    }, [pullDown]);
+
 
     useEffect(() => {
         const scroll = new BScroll (scrollContainerRef.current, {
@@ -27,9 +59,9 @@ const Scroll = forwardRef((props, ref) => {
                 bottom: bounceBottom,
             },
         });
-        setBscroll(scroll);
+        setBScroll(scroll);
         return () => {
-            setBscroll(null);
+            setBScroll(null);
         }
     }, []);
 
@@ -88,9 +120,37 @@ const Scroll = forwardRef((props, ref) => {
         }
     }));
 
+
+    useEffect( () => {
+        if (!bScroll || !pullUp) return;
+        const handlePullUp = () => {
+            if(bScroll.y <= bScroll.maxScrollY + 100){
+                pullUpDebounce();
+            }
+        };
+        bScroll.on('scrollEnd', handlePullUp);
+        return () => {
+            bScroll.off('scrollEnd', handlePullUp);
+        }
+    }, [pullUp, pullUpDebounce, bScroll])
+
+    useEffect( () => {
+        if(!bScroll || !pullDown) return;
+        const handlePullDown = (pos) => {
+            if(pos.y > 50) {
+                pullDownDebounce();
+            }
+        };
+        bScroll.on('touchEnd', handlePullDown);
+        return () => {
+            bScroll.off('touchEnd', handlePullDown);
+        }
+    }, [pullDown, pullDownDebounce, bScroll]);
     return (
         <ScrollContainer ref={scrollContainerRef}>
             {props.children}
+            <PullUpLoading style={ PullUpdisplayStyle }><Loading></Loading></PullUpLoading>
+            <PullDownLoading style={ PullDowndisplayStyle }><LoadingV2></LoadingV2></PullDownLoading>
         </ScrollContainer>
     )
 });
