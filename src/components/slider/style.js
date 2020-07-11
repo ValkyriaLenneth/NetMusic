@@ -7,16 +7,14 @@ export const SliderContainer = styled.div`
     width: 100%;
     height: 100%;
     margin: auto;
-    background: white;
-    
+    overflow: hidden;    
     .before{
         position: absolute;
-        top: 0;
-        height: 60%;
+        top: -300px;
+        height: 400px;
         width: 100%;
         background: ${style["theme-color"]};
     }
-    
     .slider-container {
         position: relative;
         width: 98%;
@@ -24,14 +22,12 @@ export const SliderContainer = styled.div`
         overflow: hidden;
         margin: auto;
         border-radius: 6px;
-        
         .slider-nav {
             position: absolute;
             display: block;
             width: 100%;
             height: 100%;
         }
-        
         .swiper-pagination-bullet-active {
             background: ${style['theme-color']};
         }

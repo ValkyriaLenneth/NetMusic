@@ -8,7 +8,7 @@ import { getSingerList, getHotSingerList, changeEnterLoading, refreshMoreHotSing
 import Loading from "../../baseUI/loading";
 import LazyLoad, { forceCheck } from 'react-lazyload';
 import {CategoryDataContext, CHANGE_ALPHA, CHANGE_CATEGORY, Data} from "./data";
-
+import { renderRoutes } from "react-router-config";
 
 function Singers(props) {
 
@@ -39,6 +39,9 @@ function Singers(props) {
         updateDispatch(val, alpha);
     }
 
+    const enterDetail = (id) => {
+        props.history.push(`/singers/${id}`);
+    }
 
 
     const renderSingerList = () => {
@@ -48,7 +51,10 @@ function Singers(props) {
                 {
                     list.map((item, index) => {
                         return (
-                            <ListItem key={item.accountId+""+index}>
+                            <ListItem
+                                key={item.accountId+""+index}
+                                onClick={() => enterDetail(item.id)}
+                            >
                                 <div className="img_wrapper">
                                     <LazyLoad placeholder={
                                         <img src={require('./singer.png')} alt="music" width="100%" height="100%"/>
@@ -81,13 +87,17 @@ function Singers(props) {
                         title={"categories(default)"}
                         handleClick={(val) => handleUpdateCategory(val)}
                         oldVal={category}
-                    ></Horizen>
+                    >
+
+                    </Horizen>
                     <Horizen
                         list={alphaTypes}
                         title={"alphaTypes:"}
                         handleClick={(val) => handleUpdateAlpha(val)}
                         oldVal={alpha}
-                    ></Horizen>
+                    >
+
+                    </Horizen>
                 </NavContainer>
                 <ListContainer>
                     <Scroll
@@ -102,6 +112,7 @@ function Singers(props) {
                     <Loading show={ enterLoading }></Loading>
                 </ListContainer>
             </Data>
+            { renderRoutes(props.route.routes) }
         </div>
 
     )
@@ -147,5 +158,6 @@ const mapDispatchToProps = (dispatch) => {
         }
     }
 };
+
 
 export default connect(mapStateToProps, mapDispatchToProps)(React.memo(Singers));

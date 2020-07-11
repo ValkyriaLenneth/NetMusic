@@ -20,12 +20,8 @@ function Rank(props) {
         }
     }, []);
 
-    const enterDetail = (name) => {
-        const idx = filterIdx(name);
-        if(idx == null){
-            alert("No related data");
-            return;
-        }
+    const enterDetail = (detail) => {
+        props.history.push(`/rank/${detail.id}`);
     }
 
     let globalStartIndex = filterIndex (rankList);
@@ -53,9 +49,9 @@ function Rank(props) {
                     list.map((item) => {
                         return (
                             <ListItem
-                            key={item.id}
+                            key={item.coverImgId}
                             tracks={item.tracks}
-                            onClick={() => enterDetail(item.name)}
+                            onClick={() => enterDetail(item)}
                             >
                                 <div className="image_wrapper">
                                     <img src={item.coverImgUrl} alt=""/>

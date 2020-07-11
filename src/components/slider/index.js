@@ -1,7 +1,8 @@
 import React,{useEffect, useState} from "react";
 import {SliderContainer} from './style';
-import "swiper/css/swiper.css";
 import Swiper from "swiper";
+import 'swiper/css/swiper.css';
+
 
 function Slider(props) {
     // react hook: state
@@ -30,7 +31,7 @@ function Slider(props) {
                     {
                         bannerList.map ((slider) => {
                             return (
-                                <div className="swiper-slider" key={slider.imageUrl}>
+                                <div className="swiper-slide" key={slider.imageUrl}>
                                     <div className="slider-nav">
                                         <img src={slider.imageUrl} alt="Recommend" width="100%" height='100%'/>
                                     </div>
