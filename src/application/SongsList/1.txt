@@ -1,7 +1,0 @@
-<div className="first_line">
-                <div className="play_all" onClick={e => selectItem(e, 0)}>
-                    <i className="iconfont">&#xe6e3;</i>
-                    <span>Play all <span className="sum">(all: {totalCount})</span></span>
-                </div>
-                { showCollect? collect(collectCount): null }
-            </div>

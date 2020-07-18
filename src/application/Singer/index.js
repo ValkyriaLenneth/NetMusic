@@ -8,9 +8,11 @@ import { HEADER_HEIGHT } from "../Album";
 import { connect } from 'react-redux';
 import {changeEnterLoading, getSingerInfo} from "./store/actionCreator";
 import Loading from "../../baseUI/loading";
+import MusicNote from "../../baseUI/music-note";
 
 function Singer(props) {
     const [showStatus, setShowStatus] = useState(true);
+
 
     const setShowStatusFalse = useCallback(() => {
         setShowStatus(false);
@@ -36,6 +38,7 @@ function Singer(props) {
     const layer = useRef();
     const header = useRef();
     const initialHeight = useRef(0);
+    const musicNoteRef = useRef();
 
     const OFFSET = 5;
 
@@ -88,6 +91,10 @@ function Singer(props) {
         }
     },[]);
 
+    const musicAnimation = (x, y) => {
+        musicNoteRef.current.startAnimation({x,y});
+    };
+
     return (
         <CSSTransition
             in={showStatus}
@@ -128,12 +135,14 @@ function Singer(props) {
                         <SongsList
                             songs={songs}
                             showCollect={true}
+                            musicAnimation={musicAnimation}
                         >
 
                         </SongsList>
                     </Scroll>
                 </SongListWrapper>
                 { loading? (<Loading></Loading>): null}
+                <MusicNote ref={musicNoteRef}/>
             </Container>
         </CSSTransition>
     )

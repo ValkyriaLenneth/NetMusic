@@ -1,13 +1,22 @@
 import React from "react";
 import { SongList, SongItem } from './style';
 import { getName } from "../../api/utils";
+import { connect } from 'react-redux';
+import { changePlayList, changeCurrentIndex, changeSequencePlayList } from "../player/store/actioncreator";
 
 const SongsList = React.forwardRef(((props, refs) => {
     const { collectCount, showCollect, songs } = props;
     const totalCount = songs.length;
 
+    const { changePlayListDispatch, changeCurrentIndexDispatch, changeSequencePlayListDispatch } = props;
+    const { musicAnimation } = props;
+
+
     const selectItem = (e, index) => {
-        console.log(index);
+        changePlayListDispatch(songs);
+        changeSequencePlayListDispatch(songs);
+        changeCurrentIndexDispatch(index);
+        musicAnimation(e.nativeEvent.clientX, e.nativeEvent.clientY);
     }
 
     let songList = (list) => {
@@ -38,8 +47,6 @@ const SongsList = React.forwardRef(((props, refs) => {
         )
     }
 
-    console.log(showCollect)
-
     return (
         <SongList
             ref={refs}
@@ -55,8 +62,23 @@ const SongsList = React.forwardRef(((props, refs) => {
             <SongItem>
                 { songList(songs)}
             </SongItem>
+
         </SongList>
     )
 }));
 
-export default React.memo(SongsList);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        changePlayListDispatch (data) {
+            dispatch(changePlayList(data));
+        },
+        changeSequencePlayListDispatch(data) {
+            dispatch(changeSequencePlayList(data));
+        },
+        changeCurrentIndexDispatch (data) {
+            dispatch(changeCurrentIndex(data));
+        }
+    }
+}
+
+export default connect(null, mapDispatchToProps)(React.memo(SongsList));

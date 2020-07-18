@@ -5,23 +5,58 @@ import MiniPlayer from "./miniPlayer";
 import NormalPlayer from "./normalPlayer";
 import { getSongUrl, isEmptyObject, findIndex,shuffle } from "../../api/utils";
 import Toast from "../../baseUI/toast";
+import {playMode} from "../../api/config";
+import PlayList from "./play-List";
+import { getLyricRequest } from "../../api/request";
 
 function Player (props) {
     const { fullScreen, playing, currentIndex, currentSong:immutableCurrentSong,playList:immutablePlayList, mode, sequencePlayList:immutableSequencePlayList } = props;
-    const { toggleFullScreenDispatch, togglePlayingDispatch, changeCurrentIndexDispatch, changeCurrentDispatch, changePlayListDispatch, changeModeDispatch } = props;
+    const { toggleFullScreenDispatch, togglePlayingDispatch, changeCurrentIndexDispatch, changeCurrentDispatch, changePlayListDispatch, changeModeDispatch, togglePlayListDispatch } = props;
+
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     let percent = isNaN(currentTime / duration) ? 0 : currentTime / duration;
+
     const [preSong, setPreSong] = useState({});
+    const [modeText, setModeText] = useState("");
 
     const playList = immutablePlayList.toJS();
     const sequencePlayList = immutableSequencePlayList.toJS();
     const currentSong = immutableCurrentSong.toJS();
 
     const audioRef = useRef();
-
-    const [modeText, setModeText] = useState("");
     const toastRef = useRef();
+    const currentLyric = useRef();
+
+    const songReady = useRef(true);
+
+    useEffect(() => {
+        if( currentIndex === -1 ||
+            !playList[currentIndex] ||
+            playList[currentIndex].id === preSong.id ||
+            !playList.length ||
+            !songReady
+        ) return;
+        songReady.current = false;
+        let current = playList[currentIndex];
+        setPreSong(current);
+        changeCurrentDispatch(current);
+        audioRef.current.src=getSongUrl(current.id);
+        setTimeout(() => {
+            audioRef.current.play().then(() => {
+                songReady.current = true;
+            });
+        });
+        togglePlayingDispatch(true);
+        getLyric(current.id);
+        setCurrentTime(0);
+        setDuration((current.dt / 1000) | 0);
+
+    },[playList, currentIndex]);
+
+    useEffect(() => {
+        playing? audioRef.current.play(): audioRef.current.pause();
+    }, [playing]);
 
     const clickPlaying = (e, state) => {
         e.stopPropagation();
@@ -51,12 +86,6 @@ function Player (props) {
         changeModeDispatch(newMode);
         toastRef.current.show();
     }
-
-
-
-    useEffect(() => {
-        playing? audioRef.current.play(): audioRef.current.pause();
-    }, [playing]);
 
     const updateTime = e => {
         setCurrentTime(e.target.currentTime);
@@ -99,24 +128,35 @@ function Player (props) {
         changeCurrentIndexDispatch(index);
     }
 
-    useEffect(() => {
-        changeCurrentIndexDispatch(0);
-    },[]);
+    const handleEnd = () => {
+        if (mode === playMode.loop) {
+            handleLoop();
+        } else {
+            handleNext();
+        }
+    }
 
-    useEffect(() => {
-        if(!playing || currentIndex === -1 || !playList[currentIndex] || playList[currentIndex].id === preSong.id) return;
-        let current = playList[currentIndex];
-        changeCurrentDispatch(current);
-        setPreSong(current);
-        audioRef.current.src=getSongUrl(current.id);
+    const getLyric = id => {
+        let lyric = "";
+        if (currentLyric.current) {
+            currentLyric.current.stop();
+        }
         setTimeout(() => {
-            audioRef.current.play();
-        });
-        togglePlayingDispatch(true);
-        setCurrentTime(0);
-        setDuration((current.dt / 1000) | 0);
-    },[playList, currentIndex]);
+            songReady.current = true;
+        }, 3000);
+        getLyricRequest(id).then(data => {
+            console.log(data);
+            lyric = data.lrc.lyric;
 
+            if(!lyric) {
+                currentLyric.current = null;
+                return;
+            }
+        }).catch (() => {
+            songReady.current = true;
+            audioRef.current.play();
+        })
+    }
 
     return (
         <div>
@@ -129,6 +169,7 @@ function Player (props) {
                         playing={playing}
                         clickPlaying={clickPlaying}
                         percent={percent}
+                        togglePlayList = {togglePlayListDispatch}
                     />
             }
             {
@@ -147,11 +188,14 @@ function Player (props) {
                         handleNext={handleNext}
                         mode={mode}
                         changeMode={changeMode}
+                        togglePlayList = {togglePlayListDispatch}
                     />
             }
             <audio  ref={audioRef}
                 onTimeUpdate={updateTime}
+                onEnded={handleEnd}
             />
+            <PlayList/>
             <Toast text={modeText} ref={toastRef}/>
         </div>
     )
@@ -189,7 +233,7 @@ const mapDispatchToProps = dispatch => {
             dispatch(changePlayMode(data));
         },
         changePlayListDispatch (data) {
-            dispatch(changePlayList(data))
+            dispatch(changePlayList(data));
         }
     }
 }

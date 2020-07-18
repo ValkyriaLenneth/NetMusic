@@ -62,7 +62,6 @@ function ProgressBar(props) {
     }
 
     const progressTouchStart = (e) => {
-        console.log("touch start")
         const startTouch = {};
         startTouch.initiated = true;
         startTouch.startX = e.touches[0].pageX;
@@ -71,7 +70,6 @@ function ProgressBar(props) {
     }
 
     const progressTouchMove = (e) => {
-        console.log("touching")
         if(!touch.initiated) return;
         const deltaX = e.touches[0].pageX - touch.startX;
         const barWidth = progressBar.current.clientWidth - progressBtnWidth;
@@ -80,7 +78,6 @@ function ProgressBar(props) {
     }
 
     const progressTouchEnd = (e) => {
-        console.log('touch end')
         const endTouch = JSON.parse(JSON.stringify(touch));
         endTouch.initiated = false;
         setTouch(endTouch);

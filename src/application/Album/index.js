@@ -9,8 +9,9 @@ import { getAlbumList, changeEnterLoading } from "./store/actionCreator";
 import { isEmptyObject } from "../../api/utils";
 import Loading from "../../baseUI/loading";
 import SongsList from "../SongsList";
-export const HEADER_HEIGHT = 45;
+import MusicNote from "../../baseUI/music-note";
 
+export const HEADER_HEIGHT = 45;
 
 function Album(props) {
     const [showStatus, setShowStatus] = useState(true);
@@ -19,7 +20,7 @@ function Album(props) {
     const headerEl = useRef();
 
     const id = props.match.params.id;
-    const { currentAlbum: currentAlbumImmutable, enterLoading } = props;
+    const { currentAlbum: currentAlbumImmutable, enterLoading, songsCount } = props;
     const { getAlbumDataDispatch } = props;
 
     useEffect(() => {
@@ -99,6 +100,12 @@ function Album(props) {
         )
     }
 
+    const musicNoteRef = useRef();
+
+    const musicAnimation = (x, y) => {
+        musicNoteRef.current.startAnimation({x,y});
+    }
+
 
     return (
         <CSSTransition
@@ -109,7 +116,7 @@ function Album(props) {
             unmountOnExit
             onExited={props.history.goBack}
         >
-            <Container>
+            <Container play={songsCount}>
                 <Header
                     title={title}
                     handleClick={handleBack}
@@ -128,6 +135,7 @@ function Album(props) {
                                 collectCount={currentAlbum.subscribedCount}
                                 showCollect={true}
                                 showBackground={true}
+                                musicAnimation={musicAnimation}
                                >
                                 </SongsList>
                             </div>
@@ -136,6 +144,7 @@ function Album(props) {
                     ): null
                 }
                 { enterLoading? <Loading></Loading> : null}
+                <MusicNote ref={musicNoteRef}/>
             </Container>
         </CSSTransition>
         )
@@ -144,6 +153,7 @@ function Album(props) {
 const mapStateToProps = state => ({
     currentAlbum: state.getIn(['album', 'currentAlbum']),
     enterLoading: state.getIn(['album', 'enterLoading']),
+    songsCount: state.getIn(['player', 'playList']).size,
 })
 
 const mapDispatchToProps = dispatch => {

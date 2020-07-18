@@ -9,7 +9,7 @@ import {playMode} from "../../../api/config";
 
 function NormalPlayer(props) {
     const { song, fullScreen, playing, percent, duration, currentTime, mode } = props;
-    const { toggleFullScreen, clickPlaying, onProgressChange, handleNext, handlePrev, changeMode } = props;
+    const { toggleFullScreen, clickPlaying, onProgressChange, handleNext, handlePrev, changeMode, togglePlayList } = props;
 
     const transform = prefixStyle('transform');
 
@@ -36,7 +36,6 @@ function NormalPlayer(props) {
     };
 
     const enter = () => {
-        console.log("done")
         normalPlayerRef.current.style.display = `block`;
         const {x, y, scale} = _getPosAndScale();
         let animation = {
@@ -156,7 +155,7 @@ function NormalPlayer(props) {
                         </div>
                         <div className="icon  i-right"><i className="iconfont" onClick={handleNext}>&#xe718;</i></div>
 
-                        <div className="icon i-right"><i className="iconfont ">&#xe640;</i></div>
+                        <div className="icon i-right" onClick={() => togglePlayList(true)}><i className="iconfont ">&#xe640;</i></div>
                     </Operators>
                 </Bottom>
             </NormalPlayerContainer>
