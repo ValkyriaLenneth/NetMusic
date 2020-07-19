@@ -1,22 +1,37 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import { getName } from "../../../api/utils";
-import { NormalPlayerContainer, Top, Middle, Bottom, Operators, CDWrapper, ProgressWrapper } from './style';
+import { NormalPlayerContainer, Top, Middle, Bottom, Operators, CDWrapper, ProgressWrapper, LyricWrapper, LyricContainer } from './style';
 import { CSSTransition } from "react-transition-group";
 import animations from 'create-keyframe-animation';
 import { prefixStyle, formatPlayTime } from "../../../api/utils";
 import ProgressBar from "../../../baseUI/progress-bar";
 import {playMode} from "../../../api/config";
+import Scroll from "../../../baseUI/scroll";
+
 
 function NormalPlayer(props) {
     const { song, fullScreen, playing, percent, duration, currentTime, mode } = props;
     const { toggleFullScreen, clickPlaying, onProgressChange, handleNext, handlePrev, changeMode, togglePlayList } = props;
+    const { currentLineNum, currentPlayingLyric, currentLyric } = props;
 
     const transform = prefixStyle('transform');
 
     const normalPlayerRef = useRef();
     const cdWrapperRef = useRef();
+    const currentState = useRef("");
+    const lyricScrollRef = useRef();
+    const lyricLineRefs = useRef([]);
 
-
+    useEffect(() => {
+        if (!lyricScrollRef.current) return;
+        let bScroll = lyricScrollRef.current.getBScroll();
+        if(currentLineNum > 5) {
+            let lineEl = lyricLineRefs.current[currentLineNum - 5].current;
+            bScroll.scrollToElement(lineEl, 1000);
+        } else {
+            bScroll.scrollTo(0, 0, 1000);
+        }
+    }, [currentLineNum])
 
     const _getPosAndScale = () => {
         const targetWidth = 40;
@@ -80,6 +95,7 @@ function NormalPlayer(props) {
         cdWrapperDOM.style.transition = "";
         cdWrapperDOM.style[transform] = "";
         normalPlayerRef.current.style.display = "none";
+        currentState.current = "";
     }
 
     const getPlayMode = () => {
@@ -94,6 +110,13 @@ function NormalPlayer(props) {
         return content;
     }
 
+    const toggleCurrentState = () => {
+        if (currentState.current !== "lyric") {
+            currentState.current = "lyric";
+       } else {
+            currentState.current = "";
+        }
+    }
 
 
     return (
@@ -119,12 +142,55 @@ function NormalPlayer(props) {
                     <h1 className="title">{song.name}</h1>
                     <h1 className="subtitle">{getName(song.ar)}</h1>
                 </Top>
-                <Middle  ref={cdWrapperRef}>
-                    <CDWrapper>
-                        <div className="cd">
-                            <img src={song.al.picUrl + '?param=400x400'}  className={`image play ${playing? "": "pause"}`}/>
-                        </div>
-                    </CDWrapper>
+                <Middle
+                    ref={cdWrapperRef}
+                    onClick={toggleCurrentState}
+                >
+                    <CSSTransition
+                        timeout={400}
+                        classNames="fade"
+                        in={currentState.current !== "lyric"}
+                    >
+                        <CDWrapper
+                            style={{visibility: currentState.current !== "lyric"?  "visible": "hidden"}}
+                        >
+                            <div className="cd">
+                                <img src={song.al.picUrl + '?param=400x400'}  className={`image play ${playing? "": "pause"}`}/>
+                            </div>
+                            <p className="playing_lyric">{currentPlayingLyric}</p>
+                        </CDWrapper>
+                    </CSSTransition>
+                    <CSSTransition
+                        timeout={400}
+                        classNames="fade"
+                        in={currentState.current === "lyric"}
+                    >
+                        <LyricContainer>
+                            <Scroll ref={lyricScrollRef}>
+                                <LyricWrapper
+                                    className="lyric_wrapper"
+                                    style={{visibility: currentState.current === "lyric" ? "visible" : "hidden"}}
+                                >
+                                    {
+                                        currentLyric
+                                            ? currentLyric.lines.map((item, index) => {
+                                                lyricLineRefs.current[index] = React.createRef();
+                                                return (
+                                                    <p
+                                                        className={`text ${currentLineNum === index ? "current" : ""}`}
+                                                        key={item + index}
+                                                        ref={lyricLineRefs.current[index]}
+                                                    >
+                                                        {item.txt}
+                                                    </p>
+                                                )
+                                            })
+                                            : <p className="text pure">Pure Music</p>
+                                    }
+                                </LyricWrapper>
+                            </Scroll>
+                        </LyricContainer>
+                    </CSSTransition>
                 </Middle>
                 <Bottom className="bottom">
                     <ProgressWrapper>

@@ -8,6 +8,8 @@ import Toast from "../../baseUI/toast";
 import {playMode} from "../../api/config";
 import PlayList from "./play-List";
 import { getLyricRequest } from "../../api/request";
+import Lyric from "../../api/lyric-parse";
+
 
 function Player (props) {
     const { fullScreen, playing, currentIndex, currentSong:immutableCurrentSong,playList:immutablePlayList, mode, sequencePlayList:immutableSequencePlayList } = props;
@@ -19,6 +21,7 @@ function Player (props) {
 
     const [preSong, setPreSong] = useState({});
     const [modeText, setModeText] = useState("");
+    const [currentPlayingLyric, setPlayingLyric] = useState("")
 
     const playList = immutablePlayList.toJS();
     const sequencePlayList = immutableSequencePlayList.toJS();
@@ -29,6 +32,7 @@ function Player (props) {
     const currentLyric = useRef();
 
     const songReady = useRef(true);
+    const currentLineNum = useRef(0);
 
     useEffect(() => {
         if( currentIndex === -1 ||
@@ -61,7 +65,10 @@ function Player (props) {
     const clickPlaying = (e, state) => {
         e.stopPropagation();
         togglePlayingDispatch(state);
-    }
+        if (currentLyric.current) {
+            currentLyric.current.togglePlay(currentTime*1000);
+        }
+    };
 
     const changeMode = () => {
         let newMode = (mode + 1) % 3;
@@ -97,6 +104,9 @@ function Player (props) {
         audioRef.current.currentTime = newTime;
         if(!playing) {
             togglePlayingDispatch(true);
+        }
+        if(currentLyric.current) {
+            currentLyric.current.seek(newTime * 1000);
         }
     }
 
@@ -152,10 +162,20 @@ function Player (props) {
                 currentLyric.current = null;
                 return;
             }
+            currentLyric.current = new Lyric(lyric, handleLyric);
+            currentLyric.current.play();
+            currentLineNum.current = 0;
+            currentLyric.current.seek(0);
         }).catch (() => {
             songReady.current = true;
             audioRef.current.play();
         })
+    }
+
+    const handleLyric = ({lineNum, txt}) => {
+        if (!currentLyric.current) return;
+        currentLineNum.current = lineNum;
+        setPlayingLyric (txt);
     }
 
     return (
@@ -189,6 +209,9 @@ function Player (props) {
                         mode={mode}
                         changeMode={changeMode}
                         togglePlayList = {togglePlayListDispatch}
+                        currentLyric={currentLyric.current}
+                        currentPlayingLyric={currentPlayingLyric}
+                        currentLineNum={currentLineNum.current}
                     />
             }
             <audio  ref={audioRef}
